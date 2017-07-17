@@ -12,7 +12,7 @@ from projects.models import Skill, Project
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None):
+    def create_user(self, email, username=None, password=None):
         if not email:
             raise ValueError("Users must have an email address")
 
@@ -59,14 +59,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(models.Model):
-    email = models.EmailField(max_length=255, unique=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     first_name = models.CharField(max_length=40, default='', blank=True)
     last_name = models.CharField(max_length=40, default='', blank=True)
     bio = models.TextField(blank=True, default='')
     avatar = models.ImageField(upload_to='')
     skills = models.ManyToManyField(Skill)
-    projects = models.ManyToManyField(Project)
+
+    def __str__(self):
+        return self.user.username
 
 
 def create_profile(sender, **kwargs):

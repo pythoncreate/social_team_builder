@@ -40,6 +40,13 @@ class ProfileView(generic.ListView):
     model = models.UserProfile
     template_name = "accounts/profile.html"
 
+    def get_context_data(self, **kwargs):
+        context = super(ProfileView, self).get_context_data(**kwargs)
+        profile = models.UserProfile.objects.all()
+        context['profile'] = profile
+
+        return context
+
 
 class EditProfileView(generic.UpdateView):
     model = models.UserProfile
