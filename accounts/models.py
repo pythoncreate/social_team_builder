@@ -7,8 +7,14 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from django.db.models.signals import post_save
+import os
 
 from projects.models import Skill, Project
+
+
+def avatar_upload_path(instance, filename):
+    return os.path.join('avatars', 'user_{0}', '{1}').format(
+        instance.user.id, filename)
 
 
 class UserManager(BaseUserManager):
@@ -63,7 +69,10 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=40, default='', blank=True)
     last_name = models.CharField(max_length=40, default='', blank=True)
     bio = models.TextField(blank=True, default='')
-    avatar = models.ImageField(upload_to='')
+    avatar = models.ImageField('Avatar picture',
+                               upload_to=avatar_upload_path,
+                               null=True,
+                               blank=True)
     skills = models.ManyToManyField(Skill)
 
     def __str__(self):
