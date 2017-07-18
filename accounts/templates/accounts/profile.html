@@ -29,22 +29,21 @@
           </tr>
         </thead>
         <tbody>
+        {% for complete in completed_projects %}
           <tr class="clickable-row" data-href="project.html">
-            <td>
-              <h3>Invoice Delivery Tool</h3>
-            </td>
+           <td>
+             <h3>{{complete}}</h3>
+           </td>
             <td class="circle--cell--right">
-              <span class="secondary-label">Rails Developer</span>
             </td>
+
           </tr>
           <tr class="clickable-row" data-href="project.html">
             <td>
-              <h3>Twitter Client</h3>
-            </td>
-            <td class="circle--cell--right">
-              <span class="secondary-label">Designer</span>
+              <h3></h3>
             </td>
           </tr>
+        {% endfor %}
         </tbody>
       </table>
     </div>
@@ -67,8 +66,8 @@
       <div class="circle--secondary--module">
         <h4>My Projects</h4>
         <ul class="circle--link--list">
-          {% for project in projects.all %}
-          <li><a>{{ project }}</a></li>
+          {% for p in user.project.all %}
+          <li><a>{{ p.title }}</a></li>
           {% endfor %}
         </ul>
       </div>

@@ -47,6 +47,15 @@ class ProfileView(generic.ListView):
 
         return context
 
+    def show_completed_projects(self):
+        completed = models.Project.objects.all()
+        completed_projects = completed.filter(complete=True)
+        return {"completed_projects":completed_projects}
+
+    def show_open_projects(self):
+        open = models.Project.objects.filter(complete=False)
+        return {'open': open}
+
 
 class EditProfileView(generic.UpdateView):
     model = models.UserProfile
