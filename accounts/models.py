@@ -22,6 +22,9 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError("Users must have an email address")
 
+        if not username:
+            username = email.split('@')[0]
+
         user = self.model(
             email=self.normalize_email(email),
             username=username,

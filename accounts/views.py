@@ -2,13 +2,18 @@ from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.views.generic.edit import FormView
+from django.db.models import Q
+from django.conf import settings
 
 from .forms import UserProfileForm
 
 from . import models
+
+from projects import models as m
 
 from . import forms
 
@@ -36,25 +41,25 @@ class LogoutView(generic.RedirectView):
         return super().get(request, *args, **kwargs)
 
 
-class ProfileView(generic.ListView):
-    model = models.UserProfile
-    template_name = "accounts/profile.html"
+class ProfileView(LoginRequiredMixin,generic.TemplateView):
+    template_name = 'accounts/profile.html'
+    login_url = settings.LOGIN_REDIRECT_URL
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
-        profile = models.UserProfile.objects.all()
+        lookup = kwargs.get('username')
+        user = models.User.objects.get(username=lookup)
+        profile = models.UserProfile.objects.prefetch_related('skills').get(user=user)
         context['profile'] = profile
+        context['skills'] = [skill for skill in profile.skills.all()]
 
+        positions = m.Position.objects.all()
+        context['positions'] = positions.filter(Q(project__owner=user)& Q(project__complete=True))
+
+        projects = models.Project.objects.all()
+        context['current_projects'] = projects.filter(Q(owner=user) & Q(complete=False))
+        context['past_projects'] = projects.filter(Q(owner=user) & Q(complete=True))
         return context
-
-    def show_completed_projects(self):
-        completed = models.Project.objects.all()
-        completed_projects = completed.filter(complete=True)
-        return {"completed_projects":completed_projects}
-
-    def show_open_projects(self):
-        open = models.Project.objects.filter(complete=False)
-        return {'open': open}
 
 
 class EditProfileView(generic.UpdateView):
@@ -68,43 +73,3 @@ class SignUp(generic.CreateView):
     template_name = "accounts/signup.html"
 
 
-# @login_required
-# def view_profile(request):
-#     profile = request.user.userprofile
-#     return render(request, 'accounts/profile.html', {'profile':profile})
-#
-# @login_required
-# def edit_profile(request):
-#     user = request.user
-#     if request.method == 'POST':
-#         form = forms.EditProfileForm(data=request.POST, files=request.FILES, instance=user.userprofile)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('/accounts/profile')
-#         else:
-#             return render(request, 'accounts/profile.html', {'form':form})
-#     else:
-#         form = forms.EditProfileForm(instance=user.userprofile)
-#         args = {'form':form}
-#         return render(request, 'accounts/profile.html', args)
-#
-# @login_required
-# def change_password(request):
-#     if request.method == 'POST':
-#         form = PasswordChangeForm(data=request.POST, user=request.user)
-#
-#         if form.is_valid():
-#             form.save()
-#             update_session_auth_hash(request,form.user)
-#             return redirect('/accounts/profile')
-#
-#     else:
-#         form = PasswordChangeForm(user=request.user)
-#         args = {'form': form}
-#         return render(request, 'accounts/change_password.html', args)
-#
-# @property
-# def image_url(self):
-#     if self.image and hasattr(self.image, 'url'):
-#         return self.image.url
-#
