@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from django.core.urlresolvers import reverse
 
 class Skill(models.Model):
     """User skills class."""
@@ -35,10 +36,15 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
+    requirements = models.TextField(default='')
+    timeline = models.CharField(max_length=255, blank=True)
     complete = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title.title()
+
+    def get_absolute_url(self):
+        return reverse("projects:project_detail", kwargs={"pk": self.pk})
 
 
 class Position(models.Model):

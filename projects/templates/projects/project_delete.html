@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% load static from staticfiles %}
+
+{% block body_content %}
+
+  <div class="circle--actions--bar">
+    <div class="bounds">
+      <div class="grid-100">
+        <a class="button button-primary" href="project.html">Save Changes</a>
+        <a class="button button-text" href="index.html">Delete Project</a>
+      </div>
+    </div>
+  </div>
+
+   {% block content %}
+<div class="bounds circle--page circle--article">
+    <div class="grid-70">
+    <form action="" method="POST">
+        {% csrf_token %}
+        <h4>Are you sure you want to delete {{ project }}?</h4>
+        <p>This cannot be undone.</p>
+        <div class="grid-30">
+            <button class="button button-primary" type="submit">Yes</button>
+        </div>
+        <div class="grid-30"></div>
+        <div class="grid-30">
+            <a class="button button-secondary" href="{% url 'projects:projects' %}">No</a>
+        </div>
+    </form>
+    </div>
+</div>
+{% endblock %}
+
+{%endblock%}
