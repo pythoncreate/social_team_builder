@@ -81,6 +81,14 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    @property
+    def get_avatar_url(self):
+        if self.avatar:
+            return '/media/{}'.format(self.avatar)
+        return 'http://www.gravatar.com/avatar/{}?s=128&d=identicon'.format(
+            '94d093eda664addd6e450d7e9881bcad'
+        )
+
 
 def create_profile(sender, **kwargs):
     if kwargs['created']:

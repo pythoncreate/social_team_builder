@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic.edit import FormView
 from django.db.models import Q
 from django.conf import settings
+from django.views.generic.edit import UpdateView
 
 from .forms import UserProfileForm
 
@@ -62,19 +63,14 @@ class ProfileView(LoginRequiredMixin,generic.TemplateView):
         return context
 
 
-class EditProfileView(LoginRequiredMixin,generic.UpdateView):
+class EditProfileView(LoginRequiredMixin,UpdateView):
     model = models.UserProfile
-    template_name = "accounts/profile_edit.html"
-    form_class = forms.EditProfileForm
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = self.get_form()
-        context['p_formset'] = PositionInlineFormSet(
-            queryset=Position.objects.filter(project=context['project']),
-            prefix='p_formset'
-        )
-        return context
+    form = forms.EditProfileForm()
+    success_url = reverse_lazy('home')
+    fields = ['first_name', 'last_name', 'bio', 'avatar', 'skills']
+    slug_field = 'user__username'
+    slug_url_kwarg = 'username'
+    template_name = 'accounts/profile_edit.html'
 
 
 class SignUp(generic.CreateView):

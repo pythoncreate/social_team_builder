@@ -31,13 +31,33 @@ class UserProfileForm(forms.ModelForm):
 
 
 class EditProfileForm(forms.ModelForm):
-    bio = forms.CharField(widget=forms.Textarea, min_length=10)
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'placeholder': 'First name',
+            'class': ''
+        })
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Last name',
+            'class': ''
+        })
+    )
+    bio = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'placeholder': 'Tell us about yourself...',
+            'class': ''
+        })
+
+    )
+    avatar = forms.ImageField(
+        label='Avatar',
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': ''
+        })
+    )
 
     class Meta:
         model = models.UserProfile
-        fields = [
-            'first_name',
-            'last_name',
-            'bio',
-            'avatar',
-        ]
+        fields = ['first_name', 'last_name', 'bio', 'avatar', 'skills']
