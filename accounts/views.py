@@ -62,9 +62,19 @@ class ProfileView(LoginRequiredMixin,generic.TemplateView):
         return context
 
 
-class EditProfileView(generic.UpdateView):
+class EditProfileView(LoginRequiredMixin,generic.UpdateView):
     model = models.UserProfile
     template_name = "accounts/profile_edit.html"
+    form_class = forms.EditProfileForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.get_form()
+        context['p_formset'] = PositionInlineFormSet(
+            queryset=Position.objects.filter(project=context['project']),
+            prefix='p_formset'
+        )
+        return context
 
 
 class SignUp(generic.CreateView):
