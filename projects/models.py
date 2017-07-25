@@ -32,13 +32,17 @@ class Skill(models.Model):
 
 
 class Project(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='project')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='project', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
     requirements = models.TextField(default='')
     timeline = models.CharField(max_length=255, blank=True)
     complete = models.BooleanField(default=False)
+
+    @property
+    def open_positions(self):
+        return self.positions.exclude(filled=True)
 
     def __str__(self):
         return self.title.title()
@@ -51,7 +55,7 @@ class Position(models.Model):
     project = models.ForeignKey(Project, default='',related_name='positions')
     name = models.CharField(max_length=140)
     description = models.TextField()
-    skill = models.ForeignKey(Skill, default='')
+    skill = models.ForeignKey(Skill, default='', null=True)
     filled = models.BooleanField(default=False)
 
     def __str__(self):
