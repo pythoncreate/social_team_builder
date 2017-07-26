@@ -47,6 +47,7 @@
           <nav>
             <ul class="circle--inline">
               {% if user.is_authenticated %}
+              <li><a href="{% url 'accounts:my_notifications' %}">Notifications</a></li>
                <li><a href="{% url 'accounts:profile' username=user.username %}">Profile</a></li>
               <li><a href="{% url 'accounts:logout' %}" class="btn btn-simple">Log out</a></li>
               {% else %}
@@ -63,7 +64,7 @@
   <div class="circle--actions--bar">
     <nav class="bounds">
       <ul class="circle--pill--list">
-        <li><a class="selected" href="applications.html">Applications</a></li>
+        <li><a class="selected" href="{% url 'accounts:my_applications' %}">Applications</a></li>
       </ul>
     </nav>
   </div>

@@ -3,20 +3,31 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, Pass
 from django.core.urlresolvers import reverse_lazy
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
+from braces.views import PrefetchRelatedMixin
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import (get_object_or_404, reverse,
+                              HttpResponseRedirect, Http404)
 from django.views.generic.edit import FormView
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.views.generic.edit import UpdateView
+from notifications.signals import notify
 
-from .forms import UserProfileForm
 
 from . import models
 
 from projects import models as m
 
 from . import forms
+
+STATUS_CHOICES = {
+    'new': None,
+    'accepted': True,
+    'rejected': False
+}
+
+User = get_user_model()
 
 
 class LoginView(generic.FormView):
@@ -79,3 +90,69 @@ class SignUp(generic.CreateView):
     template_name = "accounts/signup.html"
 
 
+class UserApplications(LoginRequiredMixin,
+                           PrefetchRelatedMixin, generic.ListView):
+    model = models.UserApplication
+    template_name = 'accounts/applications.html'
+    prefetch_related = ['project', 'position']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_term = self.request.GET.get('status') or 'all'
+
+        if status_term and status_term != 'all':
+            if status_term in STATUS_CHOICES.keys():
+                queryset = queryset.filter(
+                    is_accepted=STATUS_CHOICES[status_term]
+                )
+
+    def get_context_data(self, **kwargs):
+        context = super(UserApplications, self).get_context_data(**kwargs)
+        applications  = models.UserApplication.objects.all()
+        context['applications'] = applications.filter(~Q(applicant=self.request.user))
+        return context
+
+
+class UserApplicationStatus(LoginRequiredMixin, generic.TemplateView):
+
+    def get(self, request, *args, **kwargs):
+        position_id = self.kwargs.get('position')
+        position = models.Position.objects.filter(pk=position_id).first()
+        if position.project.owner == self.request.user:
+            applicant_pk = self.kwargs.get('applicant')
+            applicant = get_object_or_404(User, pk=applicant_pk)
+            status = self.kwargs.get('status')
+            if status == 'approve' or status == 'deny':
+                if position and applicant:
+                    bstatus = True if status == 'approve' else False
+                    application = models.UserApplication.objects.filter(
+                        position=position, applicant=applicant
+                    ).update(is_accepted=bstatus)
+
+                    if status == 'approve':
+                        msg_status = 'approved'
+                    else:
+                        msg_status = 'denied'
+
+                    notify.send(
+                        applicant,
+                        recipient=applicant,
+                        verb='Your application for {} as {} was {}'.format(
+                            position.project.title, position.name, msg_status
+                        ),
+                        description=''
+                    )
+                    return HttpResponseRedirect(reverse('acconts:my_applications'))
+        return HttpResponseRedirect(reverse('accounts:my_applications'))
+
+
+class UserNotifications(LoginRequiredMixin, PrefetchRelatedMixin, generic.TemplateView):
+    template_name = 'accounts/notifications.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['unreads'] = self.request.user.notifications.unread()
+        return context
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)

@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 import os
 
-from projects.models import Skill, Project
+from projects.models import *
 
 
 def avatar_upload_path(instance, filename):
@@ -95,3 +95,13 @@ def create_profile(sender, **kwargs):
         user_profile = UserProfile.objects.create(user=kwargs['instance'])
 
 post_save.connect(create_profile, sender=User)
+
+
+class UserApplication(models.Model):
+    applicant = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='application')
+    project = models.ForeignKey('projects.Project')
+    position = models.ForeignKey('projects.Position', related_name='applications')
+    is_accepted = models.NullBooleanField(default=None)
+
+    def __str__(self):
+        return '{} -- {} for {}'.format(self.applicant, self.position, self.project)

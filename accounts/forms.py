@@ -57,6 +57,13 @@ class EditProfileForm(forms.ModelForm):
             'class': ''
         })
     )
+    skills = forms.ModelMultipleChoiceField(
+        queryset=models.Skill.objects.all(),
+        widget=forms.CheckboxSelectMultiple(attrs={'size': 20}),
+        required=False,
+        label=''
+    )
+
 
     class Meta:
         model = models.UserProfile

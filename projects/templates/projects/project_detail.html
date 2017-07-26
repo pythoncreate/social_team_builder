@@ -3,14 +3,16 @@
 
 {% block body_content %}
 
+{% if user.is_authenticated and user == project.owner %}
   <div class="circle--actions--bar">
     <div class="bounds">
       <div class="grid-100">
         <a class="button" href="{% url 'projects:project_edit' pk=project.pk %}">Edit Project</a>
-        <a class="button button-text" href="{% url 'projects:project_delete' pk=project.pk %}"">Delete Project</a>
+        <a class="button button-text" href="{% url 'projects:project_delete' pk=project.pk %}">Delete Project</a>
       </div>
     </div>
   </div>
+{% endif %}
 
   <div class="bounds circle--page circle--article">
     <div class="grid-70">
@@ -33,7 +35,7 @@
             {% for p in positions %}
             <h3>{{p.name}}</h3>
               <p>{{p.description}}</p>
-              <a class="button button-primary">Apply</a>
+              <a class="button button-primary" href="{% url 'projects:position_apply' p.project.pk p.pk %}">Apply</a>
               {% endfor %}
               {% else %}
               <p>No positions</p>

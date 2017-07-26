@@ -1,11 +1,12 @@
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, reverse, Http404
 from django.views import generic
 from django.db.models import Q
 from braces.views import LoginRequiredMixin, PrefetchRelatedMixin
 from django.http import Http404
 from django.shortcuts import render
 from django.core.urlresolvers import reverse_lazy
-
+from notifications.signals import notify
 
 from accounts.models import *
 from .models import *
@@ -62,7 +63,7 @@ class ProjectCreateView(LoginRequiredMixin, generic.CreateView):
     model = Project
     form_class = ProjectCreateForm
     template_name = 'projects/project_new.html'
-    success_url = reverse_lazy('projects:projects')
+    success_url = reverse_lazy('home')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -91,7 +92,45 @@ class ProjectCreateView(LoginRequiredMixin, generic.CreateView):
                     position.project = project
                     position.save()
                 p_formset.save_m2m()
-        return HttpResponseRedirect(reverse('projects:projects'))
+        return HttpResponseRedirect(reverse('home'))
 
-class PositionApplyView(LoginRequiredMixin,generic.CreateView):
-    pass
+
+class PositionApplyView(LoginRequiredMixin, generic.TemplateView):
+    def get(self, request, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        pos_pk = self.kwargs.get('position')
+        project = get_object_or_404(models.Project, pk=pk)
+        position = get_object_or_404(models.Position, pk=pos_pk)
+        application = UserApplication.objects.filter(
+            position=position,
+            applicant=self.request.user
+        )
+
+        if application.exists():
+            return HttpResponseRedirect(reverse(
+                   'projects:project_detail', kwargs={'pk': pk}))
+
+        UserApplication.objects.create(
+            applicant=self.request.user,
+            project=project,
+            position=position
+        )
+
+        notify.send(
+            self.request.user,
+            recipient=self.request.user,
+            verb='YOU submitted an application for {} as {}.'.format(
+              project.title, position.name
+            ),
+            description=''
+        )
+        notify.send(
+            project.owner,
+            recipient=project.owner,
+            verb='{} submitted an application for {} as {}'.format(
+                self.request.user, project.title, position.name,
+            ),
+            description=''
+        )
+        return HttpResponseRedirect(reverse(
+            'home'))
