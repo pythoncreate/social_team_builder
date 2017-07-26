@@ -15,10 +15,19 @@ from .forms import *
 
 class ProjectListView(generic.ListView):
     model = Project
-    context_object_name = 'project_list'
-    queryset = Project.objects.all()
     template_name = 'index.html'
+    context_object_name = 'project_list'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.GET.get('s')
+        if search_term:
+            queryset = queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
+
+        return queryset
 
 class ProjectDetailView(generic.DetailView):
     model = Project

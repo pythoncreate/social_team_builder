@@ -17,13 +17,18 @@ from projects.models import *
 from accounts.models import *
 
 
-class ProjectListView(generic.TemplateView):
+class HomeView(generic.ListView):
+    model = Project
     template_name = 'index.html'
+    context_object_name = 'project_home'
 
-    def get_context_data(self, **kwargs):
-        context = super(ProjectListView, self).get_context_data(**kwargs)
-        projects = Project.objects.all()
-        context['current_projects'] = projects.filter(Q(complete=False))
-        positions = Position.objects.all()
-        context['positions'] = positions.filter(project=context['current_projects'])
-        return context
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_term = self.request.GET.get('s')
+        if search_term:
+            queryset = queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
+
+        return queryset

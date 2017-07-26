@@ -142,7 +142,7 @@ class UserApplicationStatus(LoginRequiredMixin, generic.TemplateView):
                         ),
                         description=''
                     )
-                    return HttpResponseRedirect(reverse('acconts:my_applications'))
+                    return HttpResponseRedirect(reverse('accounts:my_applications'))
         return HttpResponseRedirect(reverse('accounts:my_applications'))
 
 

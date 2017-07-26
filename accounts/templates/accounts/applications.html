@@ -62,7 +62,19 @@
                 <td class="circle--cell--right">
                   <span class="secondary-label">{{ application.position }}</span>
                 </td>
+                {% if application.is_accepted == None %}
+                    <td>
+                        <a href="{% url 'accounts:status_update' application.position.pk application.applicant.pk 'approve' %}">Approve</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'accounts:status_update' application.position.pk application.applicant.pk 'deny' %}">Deny</a>
+                    </td>
 
+                {% elif application.is_accepted %}
+                    <td colspan="2">Approved!</td>
+                {% elif not application.is_accepted %}
+                    <td colspan="2">Denied</td>
+                {% endif %}
            </tr>
          {% endfor %}
 
